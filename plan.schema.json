@@ -1,0 +1,210 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/pseusys/git-sleep/main/plan.schema.json",
+  "title": "git-sleep plan",
+  "anyOf": [
+    {
+      "additionalProperties": false,
+      "description": "A git-sleep plan: pull requests to merge in dependency order, and how.",
+      "properties": {
+        "$schema": {
+          "type": "string",
+          "description": "JSON schema of this file, for editors; ignored by git-sleep.",
+          "title": "Schema"
+        },
+        "poll_interval": {
+          "default": 60.0,
+          "description": "Seconds between polls of every active pull request. Default: 60.",
+          "exclusiveMinimum": 0,
+          "title": "Poll Interval",
+          "type": "number"
+        },
+        "defaults": {
+          "$ref": "#/$defs/Settings",
+          "description": "Settings applied to every pull request unless it overrides them."
+        },
+        "pulls": {
+          "description": "Pull requests to merge: objects, or bare pull request URLs.",
+          "items": {
+            "$ref": "#/$defs/Pull"
+          },
+          "minItems": 1,
+          "title": "Pulls",
+          "type": "array"
+        }
+      },
+      "required": [
+        "pulls"
+      ],
+      "title": "PlanFile",
+      "type": "object"
+    },
+    {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/Pull"
+      },
+      "description": "A bare list of pull requests, the same as {\"pulls\": [...]}."
+    }
+  ],
+  "$defs": {
+    "PullEntry": {
+      "additionalProperties": false,
+      "description": "A pull request to merge, with its dependencies and setting overrides.",
+      "properties": {
+        "merge_method": {
+          "enum": [
+            "merge",
+            "squash",
+            "rebase"
+          ],
+          "type": "string",
+          "description": "How the pull request is merged. Default: merge.",
+          "title": "Merge Method"
+        },
+        "checks": {
+          "enum": [
+            "all",
+            "required"
+          ],
+          "type": "string",
+          "description": "Which checks must pass: all of them, or only those required by branch protection or rulesets. Default: all.",
+          "title": "Checks"
+        },
+        "update_branch": {
+          "type": "boolean",
+          "description": "Update the branch from its base when it is behind. Default: false.",
+          "title": "Update Branch"
+        },
+        "retry": {
+          "$ref": "#/$defs/RetrySettings",
+          "description": "When and how often failed GitHub Actions runs are restarted."
+        },
+        "url": {
+          "description": "Pull request URL: https://<host>/<owner>/<repo>/pull/<number>.",
+          "title": "Url",
+          "type": "string",
+          "pattern": "^https?://[^/]+/([^/]+)/([^/]+)/pull/(\\d+)/?$"
+        },
+        "id": {
+          "minLength": 1,
+          "type": "string",
+          "description": "Name used in depends_on. Default: the URL.",
+          "title": "Id"
+        },
+        "depends_on": {
+          "default": [],
+          "description": "Ids or URLs of the pull requests that must be merged first; a single string is accepted.",
+          "title": "Depends On",
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          ]
+        }
+      },
+      "required": [
+        "url"
+      ],
+      "title": "PullEntry",
+      "type": "object"
+    },
+    "RetrySettings": {
+      "additionalProperties": false,
+      "description": "When and how often the failed GitHub Actions runs of a pull request are restarted.",
+      "properties": {
+        "max_attempts": {
+          "minimum": 0,
+          "type": "integer",
+          "description": "Batch restarts of failed runs per pull request and head commit. Default: 3.",
+          "title": "Max Attempts"
+        },
+        "strategy": {
+          "enum": [
+            "constant",
+            "linear",
+            "exponential"
+          ],
+          "type": "string",
+          "description": "How the delay grows between restarts: delay, delay × (n+1) or delay × factor^n. Default: exponential.",
+          "title": "Strategy"
+        },
+        "delay": {
+          "minimum": 0,
+          "type": "number",
+          "description": "Seconds before the first restart. Default: 60.",
+          "title": "Delay"
+        },
+        "factor": {
+          "minimum": 1,
+          "type": "number",
+          "description": "Multiplier per restart for the exponential strategy. Default: 2.",
+          "title": "Factor"
+        },
+        "max_delay": {
+          "minimum": 0,
+          "type": "number",
+          "description": "Upper bound on any delay, in seconds. Default: 3600.",
+          "title": "Max Delay"
+        }
+      },
+      "title": "RetrySettings",
+      "type": "object"
+    },
+    "Settings": {
+      "additionalProperties": false,
+      "description": "Settings for every pull request; in a pull request, they override ``defaults``.",
+      "properties": {
+        "merge_method": {
+          "enum": [
+            "merge",
+            "squash",
+            "rebase"
+          ],
+          "type": "string",
+          "description": "How the pull request is merged. Default: merge.",
+          "title": "Merge Method"
+        },
+        "checks": {
+          "enum": [
+            "all",
+            "required"
+          ],
+          "type": "string",
+          "description": "Which checks must pass: all of them, or only those required by branch protection or rulesets. Default: all.",
+          "title": "Checks"
+        },
+        "update_branch": {
+          "type": "boolean",
+          "description": "Update the branch from its base when it is behind. Default: false.",
+          "title": "Update Branch"
+        },
+        "retry": {
+          "$ref": "#/$defs/RetrySettings",
+          "description": "When and how often failed GitHub Actions runs are restarted."
+        }
+      },
+      "title": "Settings",
+      "type": "object"
+    },
+    "Pull": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/PullEntry"
+        },
+        {
+          "type": "string",
+          "pattern": "^https?://[^/]+/([^/]+)/([^/]+)/pull/(\\d+)/?$",
+          "description": "A bare pull request URL, the same as {\"url\": <URL>}."
+        }
+      ]
+    }
+  }
+}

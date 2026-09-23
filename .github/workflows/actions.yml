@@ -1,0 +1,28 @@
+name: Actions
+
+on:
+  push:
+    paths:
+      - ".github/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != format('refs/heads/{0}', github.event.repository.default_branch) }}
+
+jobs:
+  actionlint:
+    name: Lint workflows
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository 📥
+        uses: actions/checkout@v7
+
+      # The image has no major-version tag, so it is pinned exactly; it bundles shellcheck for the run: blocks.
+      - name: Run actionlint 🔍
+        shell: bash
+        run: docker run --rm --volume "${PWD}:/repo" --workdir /repo rhysd/actionlint:1.7.12 -color

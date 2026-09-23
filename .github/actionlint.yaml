@@ -1,0 +1,4 @@
+# actionlint configuration: https://github.com/rhysd/actionlint/blob/main/docs/config.md
+# Every job runs on GitHub-hosted runners, so no self-hosted runner labels are declared.
+self-hosted-runner:
+  labels: []

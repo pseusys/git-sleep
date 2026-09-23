@@ -1,0 +1,43 @@
+# Pull request state and every check of its head commit, one page of checks at a time.
+query($owner: String!, $repo: String!, $number: Int!, $cursor: String) {
+  repository(owner: $owner, name: $repo) {
+    pullRequest(number: $number) {
+      state
+      isDraft
+      mergeable
+      mergeStateStatus
+      headRefOid
+      url
+      commits(last: 1) {
+        nodes {
+          commit {
+            statusCheckRollup {
+              contexts(first: 100, after: $cursor) {
+                pageInfo { hasNextPage endCursor }
+                nodes {
+                  __typename
+                  ... on CheckRun {
+                    id
+                    name
+                    status
+                    conclusion
+                    detailsUrl
+                    isRequired(pullRequestNumber: $number)
+                    checkSuite { workflowRun { databaseId workflow { databaseId } } }
+                  }
+                  ... on StatusContext {
+                    id
+                    context
+                    state
+                    targetUrl
+                    isRequired(pullRequestNumber: $number)
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

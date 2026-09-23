@@ -1,0 +1,29 @@
+{
+  "$schema": "../plan.schema.json",
+  "poll_interval": 60,
+  "defaults": {
+    "merge_method": "squash",
+    "checks": "all",
+    "update_branch": false,
+    "retry": {
+      "max_attempts": 3,
+      "strategy": "exponential",
+      "delay": 60,
+      "factor": 2,
+      "max_delay": 3600
+    }
+  },
+  "pulls": [
+    { "id": "lib", "url": "https://github.com/acme/lib/pull/12" },
+    { "id": "sdk", "url": "https://github.com/acme/sdk/pull/7", "depends_on": ["lib"] },
+    {
+      "id": "app",
+      "url": "https://github.com/acme/app/pull/34",
+      "depends_on": ["lib", "sdk"],
+      "merge_method": "merge",
+      "checks": "required",
+      "update_branch": true,
+      "retry": { "strategy": "constant", "delay": 120 }
+    }
+  ]
+}

@@ -1,0 +1,40 @@
+# Ruff configuration for git-sleep, adapted from the agentic-layout-template's memory/scripts/ruff.toml.
+#
+#     poetry run ruff check .
+#     poetry run ruff format .
+#
+# The selected rules enforce the Python coding rules in AGENTS.md; each is
+# commented with the rule it stands for.
+#
+# Docs: https://docs.astral.sh/ruff/configuration/
+
+# Long lines are preferred over broken ones — see AGENTS.md.
+# This is a backstop against runaway lines, not a wrapping target.
+line-length = 320
+
+[lint]
+preview = true
+
+select = [
+    "E", "F",     # pycodestyle, pyflakes — the baseline
+    "I",          # isort — imports sorted, and at the top of the file
+    "UP",         # pyupgrade — no syntax kept alive for versions we do not support
+    "B",          # bugbear — the bug-shaped subset of style
+    "ANN",        # flake8-annotations — type hints wherever possible
+    "PLC0415",    # no imports inside functions
+    "PLR2004",    # magic-value-comparison — use named constants
+    "PTH",        # flake8-use-pathlib — pathlib over os.path
+    "PERF",       # perflint — avoidable inefficiency
+    "SIM",        # flake8-simplify
+    "ICN001",     # idiomatic import aliases, where a convention exists
+]
+
+ignore = [
+    "ANN401",                       # `Any` is allowed where a library gives you nothing better
+    "RUF001", "RUF002", "RUF003",   # ambiguous unicode: the em dashes in docstrings are deliberate
+]
+
+# Per-file exceptions. Keep each one commented with the reason it exists — an
+# uncommented ignore is indistinguishable from a mistake six months later.
+[lint.per-file-ignores]
+"tests/**" = ["PLR2004"]   # a literal expected value is what a test asserts; naming it would hide the expectation

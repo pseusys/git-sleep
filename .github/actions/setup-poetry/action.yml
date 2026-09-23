@@ -1,0 +1,38 @@
+name: Set up Poetry project
+description: Install Python and Poetry, then the project with its dependencies into an in-project virtualenv cached on poetry.lock.
+
+inputs:
+  python-version:
+    description: Python version to install.
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Set up Python 🐍
+      id: python
+      uses: actions/setup-python@v7
+      with:
+        python-version: ${{ inputs.python-version }}
+
+    - name: Install Poetry 📜
+      shell: bash
+      run: pipx install poetry
+
+    - name: Keep the virtualenv in the project 📁
+      shell: bash
+      run: echo "POETRY_VIRTUALENVS_IN_PROJECT=true" >> "${GITHUB_ENV}"
+
+    - name: Restore virtualenv 💾
+      uses: actions/cache@v6
+      with:
+        path: .venv
+        key: venv-${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{ hashFiles('poetry.lock') }}
+
+    - name: Select Python 🎯
+      shell: bash
+      run: poetry env use "${{ steps.python.outputs.python-path }}"
+
+    - name: Install dependencies 📦
+      shell: bash
+      run: poetry install
